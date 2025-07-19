@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Play, Clock, User, X } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 
 const NowPlayingPopup: React.FC = () => {
   const { state } = useApp();

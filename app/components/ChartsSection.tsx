@@ -2,7 +2,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Users, Clock, Trophy } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 
 const ChartsSection: React.FC = () => {
   const { state } = useApp();

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import AppHeader from '../../components/AppHeader';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../components/contexts/AppContext';
 import { formatCurrency, formatNumber, formatTimeAgo } from '../../utils/formatters';
 
 const ProfilePage: React.FC = () => {

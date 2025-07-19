@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { Plus, Link, Loader2 } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 
 const SongSubmissionForm: React.FC = () => {
   const { state, actions } = useApp();

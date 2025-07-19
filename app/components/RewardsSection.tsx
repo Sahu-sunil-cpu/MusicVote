@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 import { Trophy, Clock, Gift, TrendingUp, Crown, Star } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 import { formatCurrency, formatTimeAgo } from '../utils/formatters';
 
 const RewardsSection: React.FC = () => {

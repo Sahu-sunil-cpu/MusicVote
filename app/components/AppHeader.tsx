@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { Play, User, LogOut, Settings, Wallet, Bell, Home, ArrowLeft, UserCircle } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 import AuthModal from './AuthModal';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

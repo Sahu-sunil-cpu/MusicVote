@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { Play, User, LogOut, Settings, Wallet, Bell } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 import AuthModal from './AuthModal';
 
 const Header: React.FC = () => {

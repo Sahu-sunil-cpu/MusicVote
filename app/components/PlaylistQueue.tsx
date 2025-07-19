@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Play, Clock, Trophy, TrendingUp, Music, MoreVertical } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 import PlaylistSongItem from './PlaylistSongItem';
 
 const PlaylistQueue: React.FC = () => {
@@ -18,8 +18,10 @@ const PlaylistQueue: React.FC = () => {
     return bScore - aScore;
   });
 
+ 
   // Simulate dynamic queue updates
   useEffect(() => {
+    state.currentSong = sortedSongs[0]
     const interval = setInterval(() => {
       // Randomly animate some items to show dynamic updates
       const randomSong = sortedSongs[Math.floor(Math.random() * sortedSongs.length)];
@@ -34,6 +36,8 @@ const PlaylistQueue: React.FC = () => {
         }, 1000);
       }
     }, 5000);
+
+   
 
     return () => clearInterval(interval);
   }, [sortedSongs]);

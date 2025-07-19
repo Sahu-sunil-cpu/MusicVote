@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Crown, ExternalLink, Clock, User } from 'lucide-react';
 import { Song } from '../types';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 import { formatTimeAgo, formatNumber } from '../utils/formatters';
 import PaymentModal from './PaymentModal';
 

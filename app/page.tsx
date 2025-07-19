@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { AppProvider } from "./contexts/AppContext";
+import { AppProvider } from "./components/contexts/AppContext";
 import LandingPage from "./components/Landing";
 
 export default function Home() {

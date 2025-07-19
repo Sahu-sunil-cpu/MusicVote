@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 import { Play, Clock, Trophy, TrendingUp } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 import SongCard from './SongCard';
 
 const SongQueue: React.FC = () => {

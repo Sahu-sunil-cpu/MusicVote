@@ -1,45 +1,18 @@
+type StreamType = 'youtube' | 'spotify'
+
 export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  youtubeId: string;
-  thumbnail: string;
-  submittedBy: string;
-  submittedAt: Date;
-  likes: number;
-  dislikes: number;
-  plays: number;
-  isPromoted: boolean;
-  promotionAmount?: number;
-  userVotes: Record<string, 'like' | 'dislike'>;
+  creatorId: string,
+  type: StreamType
+  url: string
 }
 
 export interface User {
-  id: string;
-  name: string;
-  email?: string;
-  walletAddress?: string;
-  avatar?: string;
-  authType: 'email' | 'wallet' | 'google';
-  totalRewards: number;
-  songsSubmitted: number;
-  votesGiven: number;
-  bio?: string;
-  location?: string;
-  genre?: string;
-  socialLinks?: {
-    youtube?: string;
-    spotify?: string;
-    instagram?: string;
-    twitter?: string;
-  };
-  joinedAt: Date;
-  totalEarnings: number;
-  totalPlays: number;
-  averageRating: number;
-  followers: number;
-  following: number;
+  name?: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
 }
+
 
 export interface RewardSession {
   id: string;
@@ -96,4 +69,16 @@ export interface ArtistStats {
     plays: number;
     votes: number;
   }[];
+}
+
+
+export interface AppState {
+  user: User | null;
+  songs: Song[];
+  currentSong: Song | null;
+  isPlaying: boolean;
+  notifications: Notification[];
+  rewardSessions: RewardSession[];
+  connected: boolean;
+  isLoading: boolean;
 }

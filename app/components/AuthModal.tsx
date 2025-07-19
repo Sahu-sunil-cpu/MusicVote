@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { X, Mail, Wallet, Chrome, Lock, User } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from './contexts/AppContext';
 
 interface AuthModalProps {
   isOpen: boolean;

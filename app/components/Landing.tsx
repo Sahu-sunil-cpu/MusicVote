@@ -1,19 +1,32 @@
-"use client";
+"use client"
+
 import React, { useState, useEffect } from 'react';
-import { Play, Vote, Coins, Trophy, Users, Zap, ArrowRight, Music, Headphones, Star, Calendar, DollarSign, Radio, Clock, Mic, Volume2 } from 'lucide-react';
+import { Play, Vote, Coins, Trophy, Users, Zap, ArrowRight, Music, Headphones, Star, Calendar, DollarSign, Radio, Clock, Mic, Volume2, MessageCircle, Globe, Lock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AuthModal from '../components/AuthModal';
-import Link from 'next/link';
 
 const LandingPage: React.FC = () => {
   const [currentText, setCurrentText] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const heroTexts = [
     "Vote Your Vibe. Let the Crowd Decide.",
     "Artists, Schedule Your Live Sessions.",
     "Real-time Music Democracy in Action.",
     "Promote Your Music. Reach New Fans."
+  ];
+
+  const heroImages = [
+    "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800", // DJ mixing
+    "https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800", // Concert crowd
+    "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800", // Singer performing
+    "https://images.pexels.com/photos/1540406/pexels-photo-1540406.jpeg?auto=compress&cs=tinysrgb&w=800", // Music studio
+    "https://images.pexels.com/photos/1389429/pexels-photo-1389429.jpeg?auto=compress&cs=tinysrgb&w=800", // Live concert
+    "https://images.pexels.com/photos/1047442/pexels-photo-1047442.jpeg?auto=compress&cs=tinysrgb&w=800", // Music equipment
+    "https://images.pexels.com/photos/1677710/pexels-photo-1677710.jpeg?auto=compress&cs=tinysrgb&w=800", // Artist with guitar
+    "https://images.pexels.com/photos/1644888/pexels-photo-1644888.jpeg?auto=compress&cs=tinysrgb&w=800"  // Music festival
   ];
 
   useEffect(() => {
@@ -28,6 +41,13 @@ const LandingPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const imageInterval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 3000);
+
+    return () => clearInterval(imageInterval);
+  }, [heroImages.length]);
   return (
     <>
       <div className="min-h-screen bg-gray-900 text-white">
@@ -45,22 +65,23 @@ const LandingPage: React.FC = () => {
               <div className="hidden md:flex space-x-8">
                 <a href="#artist-platform" className="text-gray-300 hover:text-white transition-colors">For Artists</a>
                 <a href="#live-sessions" className="text-gray-300 hover:text-white transition-colors">Live Sessions</a>
+                <a href="#group-listening" className="text-gray-300 hover:text-white transition-colors">Group Listening</a>
                 <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</a>
               </div>
 
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={() => window.location.href = '/signin'}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
                   Login
                 </button>
-                <Link
-                  href="/dashboard"
+                <button
+                  onClick={() => window.location.href = '/signup'}
                   className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white hover:text-gray-900 text-white px-6 py-2 rounded-full font-medium transition-all duration-200 transform hover:scale-105"
                 >
-                  Launch App
-                </Link>
+                  Get Started
+                </button>
               </div>
             </div>
           </div>
@@ -102,56 +123,80 @@ const LandingPage: React.FC = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href="/queue"
+                  <button
+                    onClick={() => window.location.href = '/signup'}
                     className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white hover:text-gray-900 text-white font-semibold py-4 px-8 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
                   >
                     <Users className="w-5 h-5" />
                     <span>Start Voting Now</span>
                     <ArrowRight className="w-5 h-5" />
-                  </Link>
+                  </button>
                   <button
-                    onClick={() => setShowAuthModal(true)}
+                    onClick={() => window.location.href = '/signin'}
                     className="bg-white/10 backdrop-blur-lg border border-white/20 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 hover:bg-white/20"
                   >
-                    Join as Artist
+                    Sign In
                   </button>
                 </div>
               </div>
 
               {/* Right Content - Dynamic Images */}
               <div className="relative">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mb-4">
-                        <Music className="w-6 h-6 text-white" />
+                <div className="relative w-full h-96 rounded-3xl overflow-hidden shadow-2xl">
+                  {/* Main Image */}
+                  <div className="relative w-full h-full">
+                    <img
+                      src={heroImages[currentImageIndex]}
+                      alt="Music Platform"
+                      className="w-full h-full object-cover transition-all duration-1000 ease-in-out transform hover:scale-105"
+                      style={{
+                        opacity: isVisible ? 1 : 0,
+                        transform: `scale(${isVisible ? 1 : 1.1})`,
+                      }}
+                    />
+                    
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    
+                    {/* Content Overlay */}
+                    <div className="absolute bottom-8 left-8 right-8">
+                      <div className={`transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                        <h3 className="text-2xl font-bold text-white mb-2">
+                          {currentImageIndex === 0 && "Live Music Democracy"}
+                          {currentImageIndex === 1 && "Real-time Audience Engagement"}
+                          {currentImageIndex === 2 && "Artist Live Performances"}
+                          {currentImageIndex === 3 && "Professional Music Studio"}
+                          {currentImageIndex === 4 && "Live Concert Experience"}
+                          {currentImageIndex === 5 && "Music Production Tools"}
+                          {currentImageIndex === 6 && "Independent Artists Platform"}
+                          {currentImageIndex === 7 && "Music Festival Atmosphere"}
+                        </h3>
+                        <p className="text-gray-300 text-lg">
+                          {currentImageIndex === 0 && "Where every vote shapes the playlist"}
+                          {currentImageIndex === 1 && "Connect with fans in real-time"}
+                          {currentImageIndex === 2 && "Schedule and perform live sessions"}
+                          {currentImageIndex === 3 && "Professional tools for artists"}
+                          {currentImageIndex === 4 && "Bring the concert experience online"}
+                          {currentImageIndex === 5 && "Create and promote your music"}
+                          {currentImageIndex === 6 && "Empower independent musicians"}
+                          {currentImageIndex === 7 && "Community-driven music discovery"}
+                        </p>
                       </div>
-                      <h3 className="font-semibold text-white mb-2">Live Voting</h3>
-                      <p className="text-sm text-gray-300">Real-time democracy in action</p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-500/20 to-teal-500/20 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl flex items-center justify-center mb-4">
-                        <Radio className="w-6 h-6 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-white mb-2">Live Sessions</h3>
-                      <p className="text-sm text-gray-300">Schedule your performances</p>
-                    </div>
-                  </div>
-                  <div className="space-y-4 mt-8">
-                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-                      <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mb-4">
-                        <DollarSign className="w-6 h-6 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-white mb-2">Earn Rewards</h3>
-                      <p className="text-sm text-gray-300">Get paid for popular tracks</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-pink-500/20 to-rose-500/20 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-                      <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl flex items-center justify-center mb-4">
-                        <Mic className="w-6 h-6 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-white mb-2">Artist Tools</h3>
-                      <p className="text-sm text-gray-300">Promote and schedule</p>
+                    
+                    {/* Image Indicators */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                      {heroImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            index === currentImageIndex 
+                              ? 'bg-white w-8' 
+                              : 'bg-white/50 hover:bg-white/75'
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -301,6 +346,146 @@ const LandingPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Group Listening Feature Section */}
+        <section id="group-listening" className="py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold mb-4">Listen Together, Vote Together</h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                Create or join listening groups to enjoy music with friends and fellow music lovers. 
+                Experience synchronized playback and real-time voting in private or public groups.
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
+              <div>
+                <h3 className="text-3xl font-bold mb-6 text-white">Connect & Listen</h3>
+                <p className="text-xl text-gray-400 mb-8">
+                  Join thousands of music lovers in real-time listening sessions. Create your own groups 
+                  or discover new communities based on your favorite genres and artists.
+                </p>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Users className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Create Private Groups</h4>
+                      <p className="text-gray-400">Invite friends to your exclusive listening parties with up to 100 members per group.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Real-time Chat</h4>
+                      <p className="text-gray-400">Discuss songs, share reactions, and connect with group members through live chat.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Play className="w-6 h-6 text-green-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Synchronized Playback</h4>
+                      <p className="text-gray-400">Everyone in the group hears the same song at the same time, creating a shared experience.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 backdrop-blur-lg rounded-3xl p-8 border border-gray-700">
+                  {/* Mock Group Interface */}
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Rock Legends Group</h3>
+                    <p className="text-gray-400">24 members listening</p>
+                  </div>
+                  
+                  {/* Currently Playing */}
+                  <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">Bohemian Rhapsody</p>
+                        <p className="text-sm text-gray-400">Queen</p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-600 rounded-full h-2 mb-2">
+                      <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full" style={{ width: '45%' }}></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>2:34</span>
+                      <span>5:55</span>
+                    </div>
+                  </div>
+                  
+                  {/* Online Members */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-300">Online Members</h4>
+                    <div className="space-y-2">
+                      {['Alex M.', 'Sarah K.', 'Mike R.', 'Emma L.'].map((name, index) => (
+                        <div key={name} className="flex items-center space-x-3">
+                          <div className="relative w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium text-white">{name.charAt(0)}</span>
+                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-800"></div>
+                          </div>
+                          <span className="text-sm text-white">{name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Group Features */}
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Globe className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-4 text-white">Public Groups</h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Discover and join public listening groups based on genres, moods, or themes. 
+                  Meet new people who share your musical taste.
+                </p>
+              </div>
+
+              <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Lock className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-4 text-white">Private Sessions</h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Create invite-only groups for intimate listening sessions with friends, 
+                  family, or close music communities.
+                </p>
+              </div>
+
+              <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-4 text-white">Live Interaction</h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Chat in real-time, react to songs, and vote together. 
+                  Experience music as a social activity like never before.
+                </p>
               </div>
             </div>
           </div>

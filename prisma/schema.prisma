@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                        String   @id @default(uuid())
+  username                  String   @unique
+  email                     String   @unique
+  password                  String
+  walletAddress             String   
+  authType                  authType
+  totalRewards              Int      @default(0)
+  averageRating             Int      @default(0)
+  followers                 Int      @default(0)
+  following                 Int      @default(0)
+  description               String   @default("")
+  location                  String   @default("")
+  joinedAt                  DateTime
+  isVerified                Boolean  @default(false)
+  verifyToken               String   @default("") 
+  verifyTokenExpiry         DateTime? 
+  forgotPasswordToken       String   @default("") 
+  forgotPasswordTokenExpiry DateTime?
+  balance                   Balance?
+  song                      Song[]
+  reward                    Reward?
+  vote                      Vote[]
+}
+
+model Vote {
+  id     String @unique
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  songId String
+  song   Song   @relation(fields: [songId], references: [id])
+}
+
+model Song {
+  id          String     @id @default(uuid())
+  type        StreamType
+  url         String
+  isPromoted  Boolean    @default(false)
+  title       String     @default("")
+  extractedId String
+  smallImg    String     @default("")
+  bigImg      String     @default("")
+  likes       Int        @default(0)
+  vote        Vote[]
+  dislikes    Int        @default(0)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  played      Boolean    @default(false)
+}
+
+model Reward {
+  id     String @id
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  rank   String
+}
+
+model Balance {
+  id           String   @id
+  totalAmount  String
+  withdraw     String
+  lastWithdraw DateTime
+  lastUpdated  DateTime
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model SocialLinks {
+  id        String  @id
+  youtube   String?
+  spotify   String?
+  instagram String?
+  twitter   String?
+}
+
+enum StreamType {
+  Youtube
+  Spotify
+}
+
+enum authType {
+  email
+  wallet
+  google
+}
