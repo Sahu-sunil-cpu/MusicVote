@@ -11,29 +11,44 @@ const secret = process.env.JWT_SECRET!;
 export async function GET(req: NextRequest) {
     try {
 
-        const userId = await ExtractDataFromToken(req);
+        // const userId = await ExtractDataFromToken(req);
 
-        console.log(userId)
+        // console.log(userId)
 
-        if(!userId) {
-            return NextResponse.json({error: "Authorization failed!", status: 400})
-        }
+        // if(!userId) {
+        //     return NextResponse.json({error: "Authorization failed!", status: 400})
+        // }
 
-        const userExist = await prismaClient.user.findFirst({
+        // const userExist = await prismaClient.user.findFirst({
+        //     where:{
+        //         id: userId,
+        //     },
+
+        //     include: {
+        //         song: true
+        //     }
+        // })
+
+        // if(!userExist) {
+        //     return NextResponse.json({error: "Authorization failed! and Invalid Token", status: 400})
+        // }
+        
+
+         const songs = await prismaClient.song.findMany({
             where:{
-                id: userId,
+                played: false,
             },
 
-            include: {
-                song: true
-            }
         })
 
-        if(!userExist) {
-            return NextResponse.json({error: "Authorization failed! and Invalid Token", status: 400})
-        }
       
-        return NextResponse.json({stream: userExist.song})
+        if(!songs) {
+            return NextResponse.json({error: "failed to fetch songs", status: 400})
+        }
+        
+
+      
+        return NextResponse.json({message: songs})
 
           } catch (error) {
         console.log(error)

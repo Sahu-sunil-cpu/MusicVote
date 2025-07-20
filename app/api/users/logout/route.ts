@@ -1,20 +1,29 @@
+import { ExtractDataFromToken } from "@/app/utils/ExtractDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
 const secret = process.env.JWT_SECRET!;
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
-        const reqBody = await req.json();
-        
+       const userId = await ExtractDataFromToken(req);
 
-       return  NextResponse.json({
+//console.log(userId)
+
+        if(!userId) {
+            return NextResponse.json({error: "Authorization failed!", status: 400})
+        }
+
+       const response = NextResponse.json({
         success: true,
         message: "Logged Out successfully"
        })
-       .cookies.set("token", "", {
+       
+       response.cookies.set("token", "", {
         httpOnly: true,
         expires: new Date(0)
        })
+
+       return response;
         
     } catch (error) {
         console.log(error)

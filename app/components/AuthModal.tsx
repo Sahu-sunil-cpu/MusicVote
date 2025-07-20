@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Wallet, Chrome, Lock, User } from 'lucide-react';
 import { useApp } from './contexts/AppContext';
+import { useRouter } from 'next/navigation';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,52 +21,46 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     walletAddress: '',
   });
   const [isConnecting, setIsConnecting] = useState(false);
+  const router = useRouter();
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsConnecting(true);
+      router.push("/signin")
     
-    try {
-      await actions.login(authMethod, formData);
-      onClose();
-    } catch (error) {
-      console.error('Login failed:', error);
-    } finally {
-      setIsConnecting(false);
-    }
   };
 
   const connectWallet = async () => {
-    setIsConnecting(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await actions.login('wallet', { 
-        name: 'Wallet User', 
-        walletAddress: '0x742d35Cc6634C0532925a3b8D3aC19E6E7EA46F1' 
-      });
-      onClose();
-    } catch (error) {
-      console.error('Wallet connection failed:', error);
-    } finally {
-      setIsConnecting(false);
-    }
+   // setIsConnecting(true);
+    // try {
+    //   await new Promise(resolve => setTimeout(resolve, 1500));
+    //   await actions.login('wallet', { 
+    //     name: 'Wallet User', 
+    //     walletAddress: '0x742d35Cc6634C0532925a3b8D3aC19E6E7EA46F1' 
+    //   });
+    //   onClose();
+    // } catch (error) {
+    //   console.error('Wallet connection failed:', error);
+    // } finally {
+    //   setIsConnecting(false);
+    // }
   };
 
   const connectGoogle = async () => {
-    setIsConnecting(true);
-    try {
-      await actions.login('google', { 
-        name: 'Google User', 
-        email: 'user@gmail.com' 
-      });
-      onClose();
-    } catch (error) {
-      console.error('Google login failed:', error);
-    } finally {
-      setIsConnecting(false);
-    }
+    // setIsConnecting(true);
+    // try {
+    //   await actions.login('google', { 
+    //     name: 'Google User', 
+    //     email: 'user@gmail.com' 
+    //   });
+    //   onClose();
+    // } catch (error) {
+    //   console.error('Google login failed:', error);
+    // } finally {
+    //   setIsConnecting(false);
+    // }
   };
 
   return (

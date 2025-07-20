@@ -1,22 +1,34 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play, User, LogOut, Settings, Wallet, Bell, Home, ArrowLeft, UserCircle } from 'lucide-react';
 import { useApp } from './contexts/AppContext';
 import AuthModal from './AuthModal';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const AppHeader: React.FC = () => {
   const { state, actions } = useApp();
   const path = usePathname();
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const router = useRouter();
 
-  const isActive = (path: string) => {
-    if (path === '/dashboard' && (path === '/dashboard' || path === '/dashboard/queue')) {
+
+  const isActive = (pathname: string) => {
+    if (pathname === path) {
       return true;
     }
     return path === path;
+  };
+
+  useEffect(() => {
+    actions.getUser();
+  }, [])
+
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+      router.push("/signin") 
   };
 
   return (
@@ -148,7 +160,7 @@ const AppHeader: React.FC = () => {
                 </>
               ) : (
                 <button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={handleSubmit}
                   className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white hover:text-gray-900 text-white px-4 py-2 rounded-full font-medium transition-all duration-200 transform hover:scale-105"
                 >
                   Get Started
@@ -158,11 +170,6 @@ const AppHeader: React.FC = () => {
           </div>
         </div>
       </header>
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
     </>
   );
 };

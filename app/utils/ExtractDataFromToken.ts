@@ -16,7 +16,8 @@ export const ExtractDataFromToken = async (req: NextRequest) => {
 
         return null;
     } catch (error: any) {
-        throw new Error(error)
+        return null
+        
     }
  
    

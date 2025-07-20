@@ -1,16 +1,31 @@
 type StreamType = 'youtube' | 'spotify'
 
 export interface Song {
-  creatorId: string,
-  type: StreamType
-  url: string
+  id: string,
+  title: string,
+  artist?: string,
+  youtubeId: string,
+  thumbnail: string,
+  submittedBy: string,
+  submittedAt?: string,
+  likes: number,
+  dislikes: number,
+  plays?: number,
+  isPromoted: boolean,
+  promotionAmount?: number,
 }
+
 
 export interface User {
   name?: string;
   email: string;
   password: string;
   confirmPassword?: string;
+}
+
+export interface UserData {
+  name: string;
+  email: string;
 }
 
 
@@ -73,7 +88,7 @@ export interface ArtistStats {
 
 
 export interface AppState {
-  user: User | null;
+  user: UserData | null;
   songs: Song[];
   currentSong: Song | null;
   isPlaying: boolean;

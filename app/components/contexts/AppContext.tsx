@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useReducer, ReactNode, useRef } from 'react';
-import { Song, User, RewardSession, Notification, AppState } from '../../types';
+import { Song, User, RewardSession, Notification, AppState, UserData } from '../../types';
 import { mockWebSocket } from '../../services/mockWebSocket';
 import { extractYouTubeId } from '../../utils/youtube';
 import toast from 'react-hot-toast';
@@ -26,7 +26,7 @@ const song = {
 }
 
 type AppAction =
-  | { type: 'SET_USER'; payload: User | null }
+  | { type: 'SET_USER'; payload: UserData | null }
   | { type: 'SET_SONGS'; payload: Song[] }
   | { type: 'ADD_SONG'; payload: Song }
   | { type: 'UPDATE_SONG'; payload: Song }
@@ -88,10 +88,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   }
 };
 
-interface UserResponse {
-    success: boolean,
-    error: string
-}
+
 
 const AppContext = createContext<{
   state: AppState;
@@ -101,8 +98,10 @@ const AppContext = createContext<{
     signup: (method: 'email' | 'wallet' | 'google', username: string, password: string, email: string) => Promise<{ success: boolean; error: string; }>;
     logout: () => void;
     submitSong: (Url: string, type: 'youtube' | 'spotify', creatorId: string) => Promise<void>;
-    voteSong: (songId: string, voteType: 'like' | 'dislike', userId: string) => Promise<void>;
-    promoteSong: (songId: string, amount: number, method: 'upi' | 'crypto', userId: string) => Promise<void>;
+    voteSong: (songId: string, voteType: 'like' | 'dislike') => Promise<void>;
+    promoteSong: (songId: string, amount: number, method: 'upi' | 'crypto') => Promise<void>;
+    getUser: () => Promise<void>;
+    getSongs: () => Promise<void>
   };
 } | null>(null);
 
@@ -123,7 +122,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     signin: async (method: 'email' | 'wallet' | 'google', email: string, password: string) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
 
         const response = await axios.post(`${BASE_URL}/api/users/signin`, {
           email,
@@ -139,7 +137,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           };
         }
 
-        dispatch({ type: 'SET_USER', payload: response.data });
         toast.success('signin successful!');
 
 
@@ -163,7 +160,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     signup: async (method: 'email' | 'wallet' | 'google', username: string, password: string, email: string) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
      
         const response = await axios.post(`${BASE_URL}/api/users/signup`, {
           username,
@@ -180,7 +176,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           };
         }
 
-        dispatch({ type: 'SET_USER', payload: response.data });
 
         return {
           success: true,
@@ -197,39 +192,63 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     },
 
 
-    logout: () => {
-      dispatch({ type: 'SET_USER', payload: null });
-      toast.success('Logged out successfully!');
+    logout: async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/api/users/logout`);
+        if(!res.data.success){
+          return;
+       
+        }
+
+        dispatch({ type: 'SET_USER', payload: null });
+        toast.success('Logged out successfully!');
+
+        return;
+      } catch (error) {
+        toast.error('error in logging out!');
+        return;
+      }
+    
     },
 
-    submitSong: async (Url: string, type: 'youtube' | 'spotify', creatorId: string) => {
+    submitSong: async (url: string, type: 'youtube' | 'spotify', creatorId: string) => {
       if (!state.user) return;
 
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        const youtubeId = extractYouTubeId(Url);
+        const youtubeId = extractYouTubeId(url);
         if (!youtubeId) {
           throw new Error('Invalid YouTube URL');
         }
 
-        const song: Song = {
-          creatorId: creatorId,
-          type: type,
-          url: Url
-        };
+      
 
-        const response = await axios.post(`${BASE_URL}/addsong`, {
-          song
+        const response = await axios.post(`${BASE_URL}/api/Streams/song`, {
+           type,
+           url
         })
 
+        console.log(response.data)
+        const SongData = response.data.message
+        const song: Song = {
+          id: SongData.id,
+          title: SongData.title,
+          artist: "no artist",
+          youtubeId: SongData.extractedId,
+          thumbnail: SongData.smallImg,
+          submittedBy: "need ",
+          likes: SongData.likes,
+          dislikes: SongData.dislikes,
+          isPromoted: SongData.isPromoted
+        } 
         if (!state.currentSong) {
-          dispatch({ type: 'SET_CURRENT_SONG', payload: response.data})
+          dispatch({ type: 'SET_CURRENT_SONG', payload: song})
         }
 
       //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
 
 
-        dispatch({ type: 'ADD_SONG', payload: response.data });
+        dispatch({ type: 'ADD_SONG', payload: song   });
         toast.success('Song submitted successfully!');
       } catch (error) {
         toast.error('Failed to submit song. Please check the URL.');
@@ -238,15 +257,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     },
 
-    voteSong: async (songId: string, voteType: 'like' | 'dislike', userId: string) => {
+    voteSong: async (songId: string, voteType: 'like' | 'dislike') => {
       if (!state.user) return;
 
 
       try {
-        const response = await axios.post(`${BASE_URL}/vote`, {
+        const response = await axios.post(`${BASE_URL}/api/Streams/vote`, {
           songId,
           voteType, 
-          userId
         })
 
         
@@ -266,7 +284,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     },
 
-    promoteSong: async (songId: string, amount: number, method: 'upi' | 'crypto', userId: string) => {
+    promoteSong: async (songId: string, amount: number, method: 'upi' | 'crypto') => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -275,7 +293,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           songId,
           amount,
           method,
-          userId
         })
           dispatch({ type: 'UPDATE_SONG', payload: response.data });
           toast.success(`Song promoted with ${method.toUpperCase()} payment!`);
@@ -286,6 +303,74 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     },
+
+    getUser: async () => {
+      try {
+
+        const response = await axios.get(`${BASE_URL}/api/users/getUser`)
+        
+
+        if(response.data.error) {
+          toast.error('user is not signed in');
+        }
+
+        const userData: UserData = {
+          email: response.data.email,
+          name: response.data.username
+        }
+        dispatch({ type: 'SET_USER', payload: userData });
+        toast.success('user is signed in');
+
+
+        console.log(response.data.message)
+
+      } catch (error: any) {
+        toast.error('signin failed. Please try again.');
+        throw Error(error)
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+
+    getSongs: async () => {
+      try {
+
+        const response = await axios.get(`${BASE_URL}/api/Streams/fetch`)
+        
+
+        if(response.data.error) {
+          toast.error('error occured while fetching queue');
+        }
+
+        console.log(response.data)
+        const SongData = response.data.message
+        const song: Song[] = SongData.map((s: any) => ({
+          id: s.id,
+          title: s.title,
+          youtubeId: s.extractedId,
+          thumbnail: s.smallImg,
+          submittedBy: "need ",
+          likes: s.likes,
+          dislikes: s.dislikes,
+          isPromoted: s.isPromoted
+        } ))
+        if (!state.currentSong) {
+          dispatch({ type: 'SET_CURRENT_SONG', payload: song[0]})
+        }
+
+      //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
+
+
+        dispatch({ type: 'SET_SONGS', payload: song   });
+        toast.success('Song submitted successfully!');
+
+      } catch (error: any) {
+        toast.error('signin failed. Please try again.');
+        throw Error(error)
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    }
   };
 
   return (
