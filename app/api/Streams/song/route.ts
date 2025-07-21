@@ -58,6 +58,10 @@ export async function POST(req: NextRequest) {
                 title: title ?? "",
                 smallImg: (thumbnails.length > 1 ? thumbnails[thumbnails.length - 2].url : thumbnails[thumbnails.length - 1].url) ?? "",
                 bigImg: thumbnails[thumbnails.length - 1].url ?? ""
+            },
+            include: {
+                likes: true,
+                dislikes: true
             }
         });
 

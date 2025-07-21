@@ -52,14 +52,14 @@ const AppHeader: React.FC = () => {
 
             {/* Navigation */}
             <nav className="hidden md:flex space-x-8">
-              <Link 
+              {/* <Link 
                 href="/dashboard/queue" 
                 className={`font-medium transition-colors ${
                   isActive('/dashboard') ? 'text-white' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 Queue
-              </Link>
+              </Link> */}
               <Link 
                 href="/dashboard/charts" 
                 className={`font-medium transition-colors ${
@@ -98,13 +98,13 @@ const AppHeader: React.FC = () => {
 
               {state.user ? (
                 <>
-                  {/* Notifications */}
+                  {/* Notifications
                   <button className="relative p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200">
                     <Bell className="w-5 h-5" />
                     <span className="absolute -top-1 -right-1 bg-white text-gray-900 text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
                       3
                     </span>
-                  </button>
+                  </button> */}
 
                   {/* User Menu */}
                   <div className="relative">

@@ -14,7 +14,7 @@ const SongSubmissionForm: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await actions.submitSong(youtubeUrl);
+      await actions.submitSong(youtubeUrl, 'youtube');
       setYoutubeUrl('');
     } finally {
       setIsSubmitting(false);

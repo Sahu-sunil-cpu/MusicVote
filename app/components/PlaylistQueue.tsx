@@ -5,7 +5,7 @@ import { useApp } from './contexts/AppContext';
 import PlaylistSongItem from './PlaylistSongItem';
 
 const PlaylistQueue: React.FC = () => {
-  const { state, actions } = useApp();
+  const { state, actions, dispatch } = useApp();
   const [animatingItems, setAnimatingItems] = useState<Set<string>>(new Set());
 
 
@@ -23,14 +23,15 @@ const PlaylistQueue: React.FC = () => {
     return bScore - aScore;
   });
 
-
+//  useEffect(() => {
+//   dispatch({type: "SET_CURRENT_SONG", payload: sortedSongs[0]})
+//  }, [state.songs])
 
 
  
   // Simulate dynamic queue updates
   useEffect(() => {
-    state.currentSong = sortedSongs[0]
-
+ 
    // console.log( state.currentSong)
     const interval = setInterval(() => {
       // Randomly animate some items to show dynamic updates
@@ -50,7 +51,7 @@ const PlaylistQueue: React.FC = () => {
    
 
     return () => clearInterval(interval);
-  }, [sortedSongs]);
+  }, []);
 
   // const handlePlayNext = () => {
   //   actions.playNextSong();
@@ -98,10 +99,10 @@ const PlaylistQueue: React.FC = () => {
           <div className="col-span-1 text-center">#</div>
           <div className="col-span-6">Title</div>
           <div className="col-span-2 text-center">Votes</div>
-          <div className="col-span-2 text-center">Duration</div>
-          <div className="col-span-1 text-center">
+          {/* <div className="col-span-2 text-center">Duration</div> */}
+          {/* <div className="col-span-1 text-center">
             <MoreVertical className="w-4 h-4 mx-auto" />
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -146,10 +147,10 @@ const PlaylistQueue: React.FC = () => {
             <div className="text-xs text-gray-400">Total Votes</div>
           </div>
           <div>
-            <div className="text-lg font-bold text-white">
+            {/* <div className="text-lg font-bold text-white">
               {Math.floor(sortedSongs.length * 3.5)} min
             </div>
-            <div className="text-xs text-gray-400">Est. Time</div>
+            <div className="text-xs text-gray-400">Est. Time</div> */}
           </div>
         </div>
       </div>

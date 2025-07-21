@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 import AppHeader from '../components/AppHeader';
@@ -5,8 +7,11 @@ import VideoPlayer from '../components/VideoPlayer';
 import PlaylistQueue from '../components/PlaylistQueue';
 import SongSubmissionForm from '../components/SongSubmissionForm';
 import NowPlayingPopup from '../components/NowPlayingPopup';
+import { useApp } from '../components/contexts/AppContext';
 
 const QueuePage: React.FC = () => {
+  const {state} = useApp();
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <AppHeader />
@@ -27,15 +32,15 @@ const QueuePage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Songs in Queue</span>
-                    <span className="font-semibold text-white">24</span>
+                    <span className="font-semibold text-white">{state.songs.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Active Users</span>
-                    <span className="font-semibold text-white">1,234</span>
+                    <span className="font-semibold text-white">1</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Total Votes</span>
-                    <span className="font-semibold text-white">5,678</span>
+                    <span className="font-semibold text-white"> {state.songs.reduce((acc, song) => acc + song.likes + song.dislikes, 0)}</span>
                   </div>
                 </div>
               </div>

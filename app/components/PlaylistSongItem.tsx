@@ -5,6 +5,7 @@ import { Song } from '../types';
 import { useApp } from './contexts/AppContext';
 import { formatTimeAgo, formatNumber } from '../utils/formatters';
 import PaymentModal from './PaymentModal';
+import toast from 'react-hot-toast';
 
 interface PlaylistSongItemProps {
   song: Song;
@@ -23,7 +24,7 @@ const PlaylistSongItem: React.FC<PlaylistSongItemProps> = ({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-
+const [userVote, setUserVote] = useState('');
   //const userVote = state.user ? song.userVotes[state.user.name] : null;
   const totalVotes = song.likes + song.dislikes;
   const votePercentage = totalVotes > 0 ? (song.likes / totalVotes) * 100 : 0;
@@ -31,6 +32,7 @@ const PlaylistSongItem: React.FC<PlaylistSongItemProps> = ({
   const handleVote = async (voteType: 'like' | 'dislike') => {
     if (!state.user) return;
     await actions.voteSong(song.id, voteType);
+    setUserVote(voteType);
   };
 
   const handlePromote = () => {
@@ -120,56 +122,56 @@ const PlaylistSongItem: React.FC<PlaylistSongItemProps> = ({
           <button
             onClick={() => handleVote('like')}
             disabled={!state.user}
-            // className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-            //   userVote === 'like'
-            //     ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-            //     : 'bg-white/5 text-gray-300 hover:bg-green-500/10 hover:text-green-400 border border-transparent hover:border-green-500/30'
-            // } disabled:opacity-50`}
+            className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+              userVote === 'like'
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                : 'bg-white/5 text-gray-300 hover:bg-green-500/10 hover:text-green-400 border border-transparent hover:border-green-500/30'
+            } disabled:opacity-50`}
           >
             <ThumbsUp className="w-3 h-3" />
-            {/* <span>{formatNumber(song.likes)}</span> */}
+            <span>{formatNumber(song.likes)}</span>
           </button>
           
           <button
             onClick={() => handleVote('dislike')}
             disabled={!state.user}
-            // className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-            //   userVote === 'dislike'
-            //     ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-            //     : 'bg-white/5 text-gray-300 hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/30'
-            // } disabled:opacity-50`}
+            className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+              userVote === 'dislike'
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                : 'bg-white/5 text-gray-300 hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/30'
+            } disabled:opacity-50`}
           >
             <ThumbsDown className="w-3 h-3" />
-            {/* <span>{formatNumber(song.dislikes)}</span> */}
+            <span>{formatNumber(song.dislikes)}</span>
           </button>
         </div>
 
         {/* Duration */}
-        <div className="col-span-2 flex items-center justify-center">
+        {/* <div className="col-span-2 flex items-center justify-center">
           <span className="text-sm text-gray-400">{formatDuration()}</span>
-        </div>
+        </div> */}
 
         {/* Actions */}
         <div className="col-span-1 flex items-center justify-center">
-          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className=" items-center  transition-opacity duration-200">
             {!song.isPromoted && (
               <button
-                onClick={handlePromote}
+                onClick={() => song.id == state.currentSong?.id ? "" : handlePromote}
                 disabled={!state.user}
-                className="w-6 h-6 bg-white/10 hover:bg-yellow-400/20 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-50"
+                className=" ml-15 p-1 px-1 text-yellow-500 w-20 bg-white/10 hover:bg-yellow-400/20 rounded-full items-center justify-center transition-all duration-200 disabled:opacity-50"
                 title="Promote Song"
               >
-                <Crown className="w-3 h-3 text-yellow-400" />
+              { song.id == state.currentSong?.id ? "Playing" : "Play Now"}
               </button>
             )}
             
-            <button
+            {/* <button
               onClick={() => window.open(`https://youtube.com/watch?v=${song.youtubeId}`, '_blank')}
               className="w-6 h-6 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all duration-200"
               title="Open in YouTube"
             >
               <ExternalLink className="w-3 h-3 text-gray-400" />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

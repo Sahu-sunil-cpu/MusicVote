@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
 
         const userId = await ExtractDataFromToken(req);
 
-        console.log(userId)
-
         if(!userId) {
             return NextResponse.json({error: "Authorization failed!", status: 400})
         }

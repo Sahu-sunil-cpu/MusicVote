@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         const data = dislikeSchema.parse(await req.json());
 
         const result = await prismaClient.$transaction(async (tx) => {
-            tx.dislike.create({
+            await tx.dislike.create({
                 data: {
                     userId: userId,
                     songId: data.songId
@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
             })
 
             if (exist) {
-                prismaClient.like.delete({
+                console.log("yes")
+                await tx.like.delete({
                     where: {
                         userId_songId: {
                             userId: userId,
@@ -50,16 +51,33 @@ export async function POST(req: NextRequest) {
                 })
             }
 
-            return true;
+
+            const song = await tx.song.findUnique({
+                where: {
+                    id: data.songId
+                },
+                include: {
+                    likes: true,
+                    dislikes: true,
+                }
+            })
+
+            return song;
+
 
         })
 
+        console.log(result)
+
         if (!result) {
-            return NextResponse.json({ message: "some error happend!", status: 400 })
+            return NextResponse.json({ error: "some error happend!", status: 400 })
         }
 
         return NextResponse.json({
-            message: "Done!",
+            message: {
+                likes: result.likes,
+                dislikes: result.dislikes
+            },
             status: 200
         })
     } catch (e) {

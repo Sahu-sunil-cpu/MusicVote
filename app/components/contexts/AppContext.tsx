@@ -7,6 +7,7 @@ import { extractYouTubeId } from '../../utils/youtube';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { BASE_URL } from '../../config';
+import { Sort } from '@/app/utils/sort';
 
 
 const song = {
@@ -59,13 +60,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, songs: action.payload };
     case 'ADD_SONG':
       return { ...state, songs: [...state.songs, action.payload] };
-    //case 'UPDATE_SONG':
-      // return {
-      //   ...state,
-      //   songs: state.songs.map(song =>
-      //     song.id === action.payload.id ? action.payload : song
-      //   ),
-      //};
+    case 'UPDATE_SONG':
+    return {
+      ...state,
+      songs: state.songs.map(song =>
+        song.id === action.payload.id ? action.payload : song
+      ),
+    };
     case 'SET_CURRENT_SONG':
       return { ...state, currentSong: action.payload };
     case 'SET_PLAYING':
@@ -94,14 +95,15 @@ const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
   actions: {
-    signin: (method: 'email' | 'wallet' | 'google', email: string, password: string ) => Promise<{ success: boolean; error: string; }>;
+    signin: (method: 'email' | 'wallet' | 'google', email: string, password: string) => Promise<{ success: boolean; error: string; }>;
     signup: (method: 'email' | 'wallet' | 'google', username: string, password: string, email: string) => Promise<{ success: boolean; error: string; }>;
     logout: () => void;
-    submitSong: (Url: string, type: 'youtube' | 'spotify', creatorId: string) => Promise<void>;
+    submitSong: (url: string, type: 'youtube' | 'spotify') => Promise<void>;
     voteSong: (songId: string, voteType: 'like' | 'dislike') => Promise<void>;
     promoteSong: (songId: string, amount: number, method: 'upi' | 'crypto') => Promise<void>;
     getUser: () => Promise<void>;
-    getSongs: () => Promise<void>
+    getSongs: () => Promise<void>;
+    makeSongPlayed: (songId: string) => Promise<void>;
   };
 } | null>(null);
 
@@ -127,9 +129,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           email,
           password
         })
-        
 
-        if(response.data.error) {
+
+        if (response.data.error) {
           toast.error(response.data.error);
           return {
             success: false,
@@ -160,15 +162,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     signup: async (method: 'email' | 'wallet' | 'google', username: string, password: string, email: string) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-     
+
         const response = await axios.post(`${BASE_URL}/api/users/signup`, {
           username,
           password,
           email,
         })
-        
 
-        if(response.data.error) {
+
+        if (response.data.error) {
           toast.error('signin failed. Please try again');
           return {
             success: false,
@@ -179,7 +181,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         return {
           success: true,
-          error: '' 
+          error: ''
         };
       } catch (error) {
         return {
@@ -195,9 +197,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     logout: async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/users/logout`);
-        if(!res.data.success){
+        if (!res.data.success) {
           return;
-       
+
         }
 
         dispatch({ type: 'SET_USER', payload: null });
@@ -208,10 +210,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         toast.error('error in logging out!');
         return;
       }
-    
+
     },
 
-    submitSong: async (url: string, type: 'youtube' | 'spotify', creatorId: string) => {
+    submitSong: async (url: string, type: 'youtube' | 'spotify') => {
       if (!state.user) return;
 
       dispatch({ type: 'SET_LOADING', payload: true });
@@ -221,11 +223,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           throw new Error('Invalid YouTube URL');
         }
 
-      
+
 
         const response = await axios.post(`${BASE_URL}/api/Streams/song`, {
-           type,
-           url
+          type,
+          url
         })
 
         console.log(response.data)
@@ -237,18 +239,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           youtubeId: SongData.extractedId,
           thumbnail: SongData.smallImg,
           submittedBy: "need ",
-          likes: SongData.likes,
-          dislikes: SongData.dislikes,
+          likes: SongData.likes.length,
+          dislikes: SongData.dislikes.length,
           isPromoted: SongData.isPromoted
-        } 
+        }
         if (!state.currentSong) {
-          dispatch({ type: 'SET_CURRENT_SONG', payload: song})
+          dispatch({ type: 'SET_CURRENT_SONG', payload: song })
         }
 
-      //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
+        
 
-
-        dispatch({ type: 'ADD_SONG', payload: song   });
+        dispatch({ type: 'ADD_SONG', payload: song });
         toast.success('Song submitted successfully!');
       } catch (error) {
         toast.error('Failed to submit song. Please check the URL.');
@@ -260,16 +261,58 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     voteSong: async (songId: string, voteType: 'like' | 'dislike') => {
       if (!state.user) return;
 
-
       try {
-        const response = await axios.post(`${BASE_URL}/api/Streams/vote`, {
-          songId,
-          voteType, 
-        })
 
-        
-      dispatch({ type: 'UPDATE_SONG', payload: response.data });
-      toast.success(`Vote ${voteType === 'like' ? '👍' : '👎'} recorded!`);
+        if (voteType === 'dislike') {
+          const response = await axios.post(`${BASE_URL}/api/Streams/vote/dislike`, {
+            songId,
+          })
+
+           if(response.data.error) {
+            toast.success(`error occured while Vote 👎`);
+            return;
+           }
+
+           console.log(response.data)
+           const SongData = response.data.message
+         
+           const song = state.songs.find((s) => s.id == songId);
+
+         if(!song) {
+          toast.error(`Song Not Found`);
+          return;
+         }
+          dispatch({ type: 'UPDATE_SONG', payload: {...song, likes: SongData.likes.length, dislikes: SongData.dislikes.length} });
+          toast.success(`Vote 👎 recorded!`);
+
+        }
+
+
+        if (voteType === 'like') {
+          const response = await axios.post(`${BASE_URL}/api/Streams/vote/like`, {
+            songId,
+          })
+
+
+          if(response.data.error) {
+            toast.success(`error occured while Vote 👍`);
+            return;
+           }
+           
+           const SongData = response.data.message
+
+           const song = state.songs.find((s) => s.id == songId);
+
+           if(!song) {
+            toast.error(`Song Not Found`);
+            return;
+           }
+
+           dispatch({ type: 'UPDATE_SONG', payload: {...song, likes: SongData.likes.length, dislikes: SongData.dislikes.length} });
+           toast.success(`Vote 👍 recorded!`);
+
+        }
+
 
       } catch (error) {
         toast.error("error while voting")
@@ -288,16 +331,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         const response = await axios.post(`${BASE_URL}/song/promote`, {
           songId,
           amount,
           method,
         })
-          dispatch({ type: 'UPDATE_SONG', payload: response.data });
-          toast.success(`Song promoted with ${method.toUpperCase()} payment!`);
-        }
-       catch (error) {
+        dispatch({ type: 'UPDATE_SONG', payload: response.data });
+        toast.success(`Song promoted with ${method.toUpperCase()} payment!`);
+      }
+      catch (error) {
         toast.error('Payment failed. Please try again.');
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
@@ -308,9 +351,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try {
 
         const response = await axios.get(`${BASE_URL}/api/users/getUser`)
-        
 
-        if(response.data.error) {
+
+        if (response.data.error) {
           toast.error('user is not signed in');
         }
 
@@ -336,9 +379,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try {
 
         const response = await axios.get(`${BASE_URL}/api/Streams/fetch`)
-        
 
-        if(response.data.error) {
+
+        if (response.data.error) {
           toast.error('error occured while fetching queue');
         }
 
@@ -350,19 +393,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           youtubeId: s.extractedId,
           thumbnail: s.smallImg,
           submittedBy: "need ",
-          likes: s.likes,
-          dislikes: s.dislikes,
+          likes: s.likes.length,
+          dislikes: s.dislikes.length,
           isPromoted: s.isPromoted
-        } ))
+        }))
+
+        
+        const sortedSongs = await Sort(song)
+
+
         if (!state.currentSong) {
-          dispatch({ type: 'SET_CURRENT_SONG', payload: song[0]})
+          dispatch({ type: 'SET_CURRENT_SONG', payload: sortedSongs[0] })
         }
 
-      //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
+        //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
 
 
-        dispatch({ type: 'SET_SONGS', payload: song   });
-        toast.success('Song submitted successfully!');
+        dispatch({ type: 'SET_SONGS', payload: song });
+        toast.success('Songs loaded successfully');
 
       } catch (error: any) {
         toast.error('signin failed. Please try again.');
@@ -370,6 +418,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
+    },
+
+    makeSongPlayed: async (songId: string) => {
+       try {
+        console.log("songid ---> ",songId)
+        const res = await axios.post(`${BASE_URL}/api/Streams/songPlayed`, {
+          songId
+        });
+
+        if(!res.data.success) {
+           toast.error("error playing next top song");
+           return;
+        }
+
+        toast.success("Playing Next Song");
+       } catch (error: any) {
+        toast.error('error playing next top song');
+        throw Error(error)
+       }
     }
   };
 
