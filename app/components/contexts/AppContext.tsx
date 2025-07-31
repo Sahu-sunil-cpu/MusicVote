@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useReducer, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useRef, useEffect } from 'react';
 import { Song, User, RewardSession, Notification, AppState, UserData } from '../../types';
 import { mockWebSocket } from '../../services/mockWebSocket';
 import { extractYouTubeId } from '../../utils/youtube';
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { BASE_URL } from '../../config';
 import { Sort } from '@/app/utils/sort';
+import { SocketManager } from '@/app/lib/WsSingelton';
 
 
 const song = {
@@ -61,12 +62,12 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
     case 'ADD_SONG':
       return { ...state, songs: [...state.songs, action.payload] };
     case 'UPDATE_SONG':
-    return {
-      ...state,
-      songs: state.songs.map(song =>
-        song.id === action.payload.id ? action.payload : song
-      ),
-    };
+      return {
+        ...state,
+        songs: state.songs.map(song =>
+          song.id === action.payload.id ? action.payload : song
+        ),
+      };
     case 'SET_CURRENT_SONG':
       return { ...state, currentSong: action.payload };
     case 'SET_PLAYING':
@@ -104,6 +105,7 @@ const AppContext = createContext<{
     getUser: () => Promise<void>;
     getSongs: () => Promise<void>;
     makeSongPlayed: (songId: string) => Promise<void>;
+    WebSocketAction: () => void;
   };
 } | null>(null);
 
@@ -118,6 +120,9 @@ export const useApp = () => {
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // console.log(state.user?.name)
+
 
 
   const actions = {
@@ -218,38 +223,57 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        const youtubeId = extractYouTubeId(url);
-        if (!youtubeId) {
-          throw new Error('Invalid YouTube URL');
-        }
-
-
-
         const response = await axios.post(`${BASE_URL}/api/Streams/song`, {
           type,
           url
         })
 
-        console.log(response.data)
+
         const SongData = response.data.message
         const song: Song = {
           id: SongData.id,
           title: SongData.title,
-          artist: "no artist",
+          artist: SongData.user.username,
           youtubeId: SongData.extractedId,
           thumbnail: SongData.smallImg,
-          submittedBy: "need ",
+          submittedBy: SongData.user.username,
           likes: SongData.likes.length,
           dislikes: SongData.dislikes.length,
           isPromoted: SongData.isPromoted
         }
-        if (!state.currentSong) {
-          dispatch({ type: 'SET_CURRENT_SONG', payload: song })
+
+        //send songs via websocket
+        const socket = SocketManager.getInstance();
+        const socketData = {
+          type: "ADD_SONG",
+          payload: {
+            id: SongData.id,
+            likes: SongData.likes.map((s: any) => ({
+              userId: s.userId
+            })),
+            dislikes: SongData.dislikes.map((s: any) => ({
+              userId: s.userId
+            })),
+            played: false,
+            promoted: SongData.isPromoted,
+            videoId: SongData.extractedId,
+            createdBy: SongData.user.username,
+            img: SongData.smallImg,
+            title: SongData.title
+          }
+
         }
+        socket.sendMessage(JSON.stringify(socketData));
 
-        
+        // if (!state.currentSong) {
+        //   dispatch({ type: 'SET_CURRENT_SONG', payload: song })
+        // }
 
-        dispatch({ type: 'ADD_SONG', payload: song });
+
+
+        // dispatch({ type: 'ADD_SONG', payload: song });
+
+        console.log(state.songs)
         toast.success('Song submitted successfully!');
       } catch (error) {
         toast.error('Failed to submit song. Please check the URL.');
@@ -263,53 +287,75 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       try {
 
+        const socket = SocketManager.getInstance();
         if (voteType === 'dislike') {
-          const response = await axios.post(`${BASE_URL}/api/Streams/vote/dislike`, {
-            songId,
-          })
 
-           if(response.data.error) {
-            toast.success(`error occured while Vote 👎`);
-            return;
-           }
+          const data = {
+            type: "VOTE_SONG",
+            payload: {
+              id: songId,
+              voteType: voteType,
+              userId: state.user.name,
+            }
+          }
+          socket.sendMessage(JSON.stringify(data));
+          // const response = await axios.post(`${BASE_URL}/api/Streams/vote/dislike`, {
+          //   songId,
+          // })
 
-           console.log(response.data)
-           const SongData = response.data.message
-         
-           const song = state.songs.find((s) => s.id == songId);
+          // if (response.data.error) {
+          //   toast.success(`error occured while Vote 👎`);
+          //   return;
+          // }
 
-         if(!song) {
-          toast.error(`Song Not Found`);
-          return;
-         }
-          dispatch({ type: 'UPDATE_SONG', payload: {...song, likes: SongData.likes.length, dislikes: SongData.dislikes.length} });
-          toast.success(`Vote 👎 recorded!`);
+          // console.log(response.data)
+          // const SongData = response.data.message
+
+          // const song = state.songs.find((s) => s.id == songId);
+
+          // if (!song) {
+          //   toast.error(`Song Not Found`);
+          //   return;
+          // }
+          // dispatch({ type: 'UPDATE_SONG', payload: { ...song, likes: SongData.likes.length, dislikes: SongData.dislikes.length } });
+          // toast.success(`Vote 👎 recorded!`);
 
         }
 
 
         if (voteType === 'like') {
-          const response = await axios.post(`${BASE_URL}/api/Streams/vote/like`, {
-            songId,
-          })
 
 
-          if(response.data.error) {
-            toast.success(`error occured while Vote 👍`);
-            return;
-           }
-           
-           const SongData = response.data.message
+          const data = {
+            type: "VOTE_SONG",
+            payload: {
+              id: songId,
+              voteType: voteType,
+              userId: state.user.name,
+            }
+          }
+          socket.sendMessage(JSON.stringify(data));
+          // const response = await axios.post(`${BASE_URL}/api/Streams/vote/like`, {
+          //   songId,
+          // })
 
-           const song = state.songs.find((s) => s.id == songId);
 
-           if(!song) {
-            toast.error(`Song Not Found`);
-            return;
-           }
+          // if (response.data.error) {
+          //   toast.success(`error occured while Vote 👍`);
+          //   return;
+          // }
 
-           dispatch({ type: 'UPDATE_SONG', payload: {...song, likes: SongData.likes.length, dislikes: SongData.dislikes.length} });
-           toast.success(`Vote 👍 recorded!`);
+          // const SongData = response.data.message
+
+          // const song = state.songs.find((s) => s.id == songId);
+
+          // if (!song) {
+          //   toast.error(`Song Not Found`);
+          //   return;
+          // }
+
+          // dispatch({ type: 'UPDATE_SONG', payload: { ...song, likes: SongData.likes.length, dislikes: SongData.dislikes.length } });
+          // toast.success(`Vote 👍 recorded!`);
 
         }
 
@@ -364,7 +410,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dispatch({ type: 'SET_USER', payload: userData });
         toast.success('user is signed in');
 
-
         console.log(response.data.message)
 
       } catch (error: any) {
@@ -378,39 +423,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     getSongs: async () => {
       try {
 
-        const response = await axios.get(`${BASE_URL}/api/Streams/fetch`)
+        // const response = await axios.get(`${BASE_URL}/api/Streams/fetch`)
 
 
-        if (response.data.error) {
-          toast.error('error occured while fetching queue');
+        // if (response.data.error) {
+        //   toast.error('error occured while fetching queue');
+        // }
+
+        // //console.log(response.data)
+        // const SongData = response.data.message
+        // const song: Song[] = SongData.map((s: any) => ({
+        //   artist: s.user.username,
+        //   id: s.id,
+        //   title: s.title,
+        //   youtubeId: s.extractedId,
+        //   thumbnail: s.smallImg,
+        //   submittedBy: s.user.username,
+        //   likes: s.likes.length,
+        //   dislikes: s.dislikes.length,
+        //   isPromoted: s.isPromoted
+        // }))
+
+
+        // const sortedSongs = await Sort(song)
+
+
+        // if (!state.currentSong) {
+        //   dispatch({ type: 'SET_CURRENT_SONG', payload: sortedSongs[0] })
+        // }
+
+        // //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
+
+
+        // dispatch({ type: 'SET_SONGS', payload: song });
+        // toast.success('Songs loaded successfully');
+
+        const socket = SocketManager.getInstance();
+        const socketData = {
+          type: "FETCH_SONG",
+          payload: { maxLim: 10, userId: state.user?.name }
         }
-
-        console.log(response.data)
-        const SongData = response.data.message
-        const song: Song[] = SongData.map((s: any) => ({
-          id: s.id,
-          title: s.title,
-          youtubeId: s.extractedId,
-          thumbnail: s.smallImg,
-          submittedBy: "need ",
-          likes: s.likes.length,
-          dislikes: s.dislikes.length,
-          isPromoted: s.isPromoted
-        }))
-
-        
-        const sortedSongs = await Sort(song)
-
-
-        if (!state.currentSong) {
-          dispatch({ type: 'SET_CURRENT_SONG', payload: sortedSongs[0] })
-        }
-
-        //  dispatch({ type: 'UPDATE_SONG', payload: response.data });
-
-
-        dispatch({ type: 'SET_SONGS', payload: song });
-        toast.success('Songs loaded successfully');
+        socket.sendMessage(JSON.stringify(socketData));
 
       } catch (error: any) {
         toast.error('signin failed. Please try again.');
@@ -421,22 +474,96 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     },
 
     makeSongPlayed: async (songId: string) => {
-       try {
-        console.log("songid ---> ",songId)
+      try {
+        console.log("songid ---> ", songId)
         const res = await axios.post(`${BASE_URL}/api/Streams/songPlayed`, {
           songId
         });
 
-        if(!res.data.success) {
-           toast.error("error playing next top song");
-           return;
+        if (!res.data.success) {
+          toast.error("error playing next top song");
+          return;
         }
 
         toast.success("Playing Next Song");
-       } catch (error: any) {
+      } catch (error: any) {
         toast.error('error playing next top song');
         throw Error(error)
-       }
+      }
+    },
+
+    WebSocketAction: () => {
+      const socket = SocketManager.getInstance();
+      socket.onMessage(async (data) => {
+       
+        if (!Array.isArray(data) && data.length <= 0) {
+          return;
+        }
+
+        if(data.type == "VOTE") {
+          
+          const song: Song[] = data.payload.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            youtubeId: s.videoId,
+            thumbnail: s.img,
+            submittedBy: s.createdBy,
+            likes: s.likes.length,
+            dislikes: s.dislikes.length,
+            isPromoted: s.promoted
+          }));
+
+          const sortedSongs = await Sort(song);
+
+          dispatch({ type: 'SET_SONGS', payload: sortedSongs });
+          
+          toast.success("Vote Recorded");
+        }else if(data.type == "SUBMIT") {
+          const song: Song =  {
+             id: data.payload.id,
+            title: data.payload.title,
+            youtubeId: data.payload.videoId,
+            thumbnail: data.payload.img,
+            submittedBy: data.payload.createdBy,
+            likes: data.payload.likes.length,
+            dislikes: data.payload.dislikes.length,
+            isPromoted: data.payload.promoted
+          }
+          
+          console.log(state.currentSong)
+
+          if (!state.currentSong) {
+            dispatch({ type: 'SET_CURRENT_SONG', payload: song })
+          }
+
+          dispatch({ type: 'ADD_SONG', payload: song });
+        }else {
+          const song: Song[] = data.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            youtubeId: s.videoId,
+            thumbnail: s.img,
+            submittedBy: s.createdBy,
+            likes: s.likes.length,
+            dislikes: s.dislikes.length,
+            isPromoted: s.promoted
+          }));
+
+          const sortedSongs = await Sort(song)
+
+          console.log(state.currentSong)
+
+          if (!state.currentSong) {
+            dispatch({ type: 'SET_CURRENT_SONG', payload: sortedSongs[0] })
+          }
+
+          dispatch({ type: 'SET_SONGS', payload: sortedSongs });
+          
+          toast.success("Songs Loaded");
+        }
+
+      }
+      )
     }
   };
 

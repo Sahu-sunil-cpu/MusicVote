@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({error: "Authorization failed! and Invalid Token", status: 400})
         }
       
-        return NextResponse.json({username: userExist.username, email: userExist.email, status: 200})
+        return NextResponse.json({username: userExist.username, status: 200})
 
           } catch (error) {
         console.log(error)

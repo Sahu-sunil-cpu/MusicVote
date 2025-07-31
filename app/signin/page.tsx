@@ -87,7 +87,6 @@ const SignInPage: React.FC = () => {
         return;
       }
      
-      console.log(formData)
       toast.success('Welcome back!');
       route.push('/dashboard');
 

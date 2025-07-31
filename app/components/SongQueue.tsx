@@ -17,9 +17,6 @@ const SongQueue: React.FC = () => {
     return bScore - aScore;
   });
 
-  const handlePlayNext = () => {
-    actions.playNextSong();
-  };
 
   return (
     <div className="space-y-6">
@@ -46,15 +43,7 @@ const SongQueue: React.FC = () => {
               </span>
             </div>
             
-            {sortedSongs.length > 0 && (
-              <button
-                onClick={handlePlayNext}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-all transform hover:scale-105"
-              >
-                <Play className="w-4 h-4 inline mr-1" />
-                Play Next
-              </button>
-            )}
+           
           </div>
         </div>
       </div>

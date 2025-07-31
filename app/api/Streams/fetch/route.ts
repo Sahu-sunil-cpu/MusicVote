@@ -41,11 +41,14 @@ export async function GET(req: NextRequest) {
 
             include:{
                 dislikes: true,
-                likes: true
+                likes: true,
+                user: true
             }
 
         })
 
+
+        console.log(songs)
       
         if(!songs) {
             return NextResponse.json({error: "failed to fetch songs", status: 400})

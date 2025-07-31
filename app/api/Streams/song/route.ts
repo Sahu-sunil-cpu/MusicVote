@@ -4,6 +4,8 @@ import { z } from "zod";
 import { ExtractDatafromUrl } from "@/app/utils/ExtractDatafromUrl";
 import { extractYouTubeId } from "@/app/utils/youtube";
 import { ExtractDataFromToken } from "@/app/utils/ExtractDataFromToken";
+import { SocketManager } from "@/app/lib/WsSingelton";
+import { stringify } from "querystring";
 // import { getServerSession } from "next-auth";
 
 const CreateStreamSchema = z.object({
@@ -61,10 +63,12 @@ export async function POST(req: NextRequest) {
             },
             include: {
                 likes: true,
-                dislikes: true
+                dislikes: true,
+                user: true
             }
         });
-
+       
+        
         return NextResponse.json({
             message: stream,
             status: 200

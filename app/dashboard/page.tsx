@@ -1,17 +1,50 @@
 "use client"
 
-import React from 'react';
-import { Toaster } from 'react-hot-toast';
+import React, { useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import AppHeader from '../components/AppHeader';
 import VideoPlayer from '../components/VideoPlayer';
 import PlaylistQueue from '../components/PlaylistQueue';
 import SongSubmissionForm from '../components/SongSubmissionForm';
 import NowPlayingPopup from '../components/NowPlayingPopup';
 import { useApp } from '../components/contexts/AppContext';
+import { SocketManager } from '../lib/WsSingelton';
+import { resolve } from 'path';
+import { Song } from '../types';
+import { Sort } from '../utils/sort';
+
 
 const QueuePage: React.FC = () => {
-  const {state} = useApp();
+  const { state, dispatch, actions } = useApp();
 
+
+  const connectWS = async () => {
+
+    const socket = SocketManager.getInstance();
+    const data = {
+      type: "ADD_USER",
+      payload: {
+        userId: state.user?.name
+      }
+    }
+
+
+    setTimeout(() => {
+      socket.sendMessage(JSON.stringify(data))
+      actions.getSongs()
+    }, 3000)
+   
+    actions.WebSocketAction();
+  }
+
+  useEffect(() => {
+
+    if (!state.user?.name) {
+      return;
+    }
+    connectWS()
+
+  }, [state.user?.name])
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <AppHeader />
@@ -50,7 +83,7 @@ const QueuePage: React.FC = () => {
       </main>
 
       <NowPlayingPopup />
-      
+
       {/* Footer */}
       <footer className="border-t border-gray-800 py-8 bg-gray-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,13 +1,19 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Link, Loader2 } from 'lucide-react';
 import { useApp } from './contexts/AppContext';
+import { SocketManager } from '../lib/WsSingelton';
 
 const SongSubmissionForm: React.FC = () => {
   const { state, actions } = useApp();
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+  useEffect(() => {
+
+    
+  }, [])
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!youtubeUrl.trim() || !state.user) return;

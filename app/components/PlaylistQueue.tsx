@@ -9,9 +9,9 @@ const PlaylistQueue: React.FC = () => {
   const [animatingItems, setAnimatingItems] = useState<Set<string>>(new Set());
 
 
-  useEffect(() => {
-    actions.getSongs();
-  }, [])
+  // useEffect(() => {
+  //   actions.getSongs();
+  // }, [])
 
   const sortedSongs = [...state.songs].sort((a, b) => {
     if (a.isPromoted && !b.isPromoted) return -1;

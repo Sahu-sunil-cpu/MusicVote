@@ -10,21 +10,37 @@ const VideoPlayer: React.FC = () => {
   const { state, actions, dispatch } = useApp();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [playerReady, setPlayerReady] = useState(false);
   const [volume, setVolume] = useState(100);
-  const intervalRef = useRef(null);
   const playerRef = useRef<any>(null);
-  const elementRef = useRef(null)
   const [isAPILoaded, setIsAPILoaded] = useState(false);
+  const [finishedSongId, setfinishedSongId] = useState<string | null>(null);
+  
 
 
 
 
-  const handleFinish = async (id: string) => {
-    removeSong(0)
-    await actions.makeSongPlayed(id)
-  }
+  useEffect(() => {
+    if (!finishedSongId) return;
+  
+    const handleFinish = async (id: string) => {
+      const newPlaylist = state.songs.filter(s => s.id !== id);
+      const sortedSongs = await Sort(newPlaylist);
+      const nextSong = sortedSongs[0];
+  
+      dispatch({ type: 'SET_SONGS', payload: sortedSongs });
+      dispatch({ type: 'SET_CURRENT_SONG', payload: nextSong });
+  
+      if (sortedSongs.length > 0) {
+        loadVideo(nextSong.youtubeId);
+      }
+  
+      await actions.makeSongPlayed(id);
+    };
+  
+    handleFinish(finishedSongId);
+    setfinishedSongId(null); // reset
+  }, [finishedSongId, state.songs]); // 
 
   // Load YouTube IFrame API once
   useEffect(() => {
@@ -43,6 +59,8 @@ const VideoPlayer: React.FC = () => {
     };
   }, []);
 
+
+
   // Handle player init/destroy on videoId change
   useEffect(() => {
     if (!isAPILoaded || !state.currentSong?.youtubeId) return;
@@ -51,22 +69,23 @@ const VideoPlayer: React.FC = () => {
     if (playerRef.current) {
       playerRef.current.destroy();
     }
+ 
 
     //@ts-ignore
 
     playerRef.current = new window.YT.Player('youtube-player', {
       height: '460',
       width: '640',
-      videoId: state.currentSong?.youtubeId || 'qxmVVa-9xls',
+      videoId: `${state.currentSong?.youtubeId}` || 'qxmVVa-9xls',
       playerVars: {
         autoplay: 1,
         controls: 0,
         disablekb: 1,
         fs: 0,
-        iv_load_policy: 3,
         modestbranding: 1,
         playsinline: 1,
-        rel: 0
+        rel: 0,
+        start: 200,
       },
       events: {
         onReady: (event: any) => {
@@ -101,11 +120,8 @@ const VideoPlayer: React.FC = () => {
       case window.YT.PlayerState.ENDED:
         setIsPlaying(false);
         // Auto-play next song
-        handleFinish(state.currentSong?.id as string)
-
-
+        setfinishedSongId(state.currentSong?.id || null)       
         toast.success("video ended")
-
         break;
 
       //@ts-ignore
@@ -119,11 +135,9 @@ const VideoPlayer: React.FC = () => {
     if (!playerRef.current || !playerReady) return;
 
     const videoId1 = videoId;
-    console.log(videoId1)
     //@ts-ignore
 
     playerRef.current.loadVideoById(videoId);
-    console.log("loaded")
   };
 
 
@@ -139,40 +153,23 @@ const VideoPlayer: React.FC = () => {
 
 
 
-  const removeSong = async (indexToRemove: any) => {
-    console.log(state.currentSong?.id)
-    console.log(state.songs[0].id)
-    const newPlaylist = state.songs.filter((s) => s.id != state.currentSong?.id);
-    const sortedSongs = await Sort(newPlaylist)
-
-    console.log(newPlaylist)
-    dispatch({ type: 'SET_SONGS', payload: sortedSongs });
-
-
-    dispatch({ type: "SET_CURRENT_SONG", payload: sortedSongs[0] })
-    if (newPlaylist.length > 0) {
-      loadVideo(state.currentSong?.youtubeId);
-    }
-  }
-
-
-  if (!state.currentSong) {
-    return (
-      <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-700">
-        <div className="text-center">
-          <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Play className="w-12 h-12 text-gray-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">
-            No Song Playing
-          </h3>
-          <p className="text-gray-400">
-            Vote for songs in the queue to start the music!
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // if (!state.currentSong) {
+  //   return (
+  //     <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-700">
+  //       <div className="text-center">
+  //         <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+  //           <Play className="w-12 h-12 text-gray-400" />
+  //         </div>
+  //         <h3 className="text-xl font-semibold text-white mb-2">
+  //           No Song Playing
+  //         </h3>
+  //         <p className="text-gray-400">
+  //           Vote for songs in the queue to start the music!
+  //         </p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700 overflow-hidden">
@@ -181,9 +178,12 @@ const VideoPlayer: React.FC = () => {
         <div className="mb-6">
           <div
             id="youtube-player"
-            className="w-full h-full rounded-lg overflow-hidden"
+            //  pointer-events-none 
+            className="w-full h-full rounded-lg overflow-hidden pointer-events-none"
             style={{ aspectRatio: '16/9' }}
-          />
+          >
+
+          </div>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
