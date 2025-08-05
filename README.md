@@ -28,7 +28,10 @@ VotePlay is a decentralized, community-driven platform where users can vote for 
   - **Backend**: Node.js, Prisma, PostgreSQL, WebSockets
   - **Blockchain**: Solana & Ethereum wallet/payment integration
 
+## 📽️ Demo
 
+[![Watch the Demo](https://img.youtube.com/vi/rzBDuCjGf5U/0.jpg)](https://www.youtube.com/watch?v=rzBDuCjGf5U)
+---
 ## Installation
 
 ### 1. Clone the Repository
@@ -44,6 +47,7 @@ npm install
 npx prisma generate
 npx prisma migrate dev
 npm run dev
+
 
 
 
