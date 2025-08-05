@@ -34,7 +34,6 @@ VotePlay is a decentralized, community-driven platform where users can vote for 
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/Sahu-sunil-cpu/MusicVote.git
-cd voteplay
 ```
 ### 2. Run Application
 ```bash
@@ -45,6 +44,7 @@ npm install
 npx prisma generate
 npx prisma migrate dev
 npm run dev
+
 
 
 
